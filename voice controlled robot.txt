@@ -1,0 +1,100 @@
+
+#include <LiquidCrystal.h>
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
+
+// Ultrasonic sensor pins
+const int trigPin = 2;
+const int echoPin = 3;
+
+long duration;
+int distance;
+
+void setup() {
+  // set up the LCD's number of columns and rows: 
+  Serial.begin(9600); 
+
+  pinMode(7, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(4, OUTPUT);
+
+  digitalWrite(7, 0);
+  digitalWrite(6, 0);
+  digitalWrite(5, 0);
+  digitalWrite(4, 0);
+
+  lcd.begin(16, 2);
+  lcd.print("Robot Control");
+
+  // Initialize the ultrasonic sensor pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+}
+
+void loop() {
+  // Measure distance using the ultrasonic sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  // If distance is 3 cm or less, start reversing
+  if (distance <= 3) {
+    lcd.setCursor(0, 1);
+    lcd.print("Obstacle! Reverse");
+    digitalWrite(7, 0);
+    digitalWrite(6, 1);
+    digitalWrite(5, 0);
+    digitalWrite(4, 1);
+    delay(1000); // Reverse for 1 second
+    return; // Skip the rest of the loop
+  }
+
+  // Listen for serial input for other commands
+  if (Serial.available()) {
+    char inChar = (char)Serial.read();
+
+    if (inChar == 'a') {
+      lcd.setCursor(0, 1);
+      lcd.print("Forward       ");
+      digitalWrite(7, 1);
+      digitalWrite(6, 0);
+      digitalWrite(5, 1);
+      digitalWrite(4, 0);
+    } else if (inChar == 'b') {
+      lcd.setCursor(0, 1);
+      lcd.print("Reverse       ");
+      digitalWrite(7, 0);
+      digitalWrite(6, 1);
+      digitalWrite(5, 0);
+      digitalWrite(4, 1);
+    } else if (inChar == 'c') {
+      lcd.setCursor(0, 1);
+      lcd.print("Left          ");
+      digitalWrite(7, 1);
+      digitalWrite(6, 0);
+      digitalWrite(5, 0);
+      digitalWrite(4, 0);
+    } else if (inChar == 'd') {
+      lcd.setCursor(0, 1);
+      lcd.print("Right         ");
+      digitalWrite(7, 0);
+      digitalWrite(6, 0);
+      digitalWrite(5, 1);
+      digitalWrite(4, 0);
+    } else if (inChar == 'e') {
+      lcd.setCursor(0, 1);
+      lcd.print("Stop          ");
+      digitalWrite(7, 0);
+      digitalWrite(6, 0);
+      digitalWrite(5, 0);
+      digitalWrite(4, 0);
+    }
+  }
+  delay(100); // Add a small delay to avoid excessive serial communication
+}
